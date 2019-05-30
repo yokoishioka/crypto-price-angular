@@ -16,10 +16,10 @@ export class WebsocketService {
   }
 
   private create(url): Rx.Subject<MessageEvent> {
-    let lastbtc:String = "0";
-    let lasteth:String = "0";
-    let lastltc:String = "0";
-    let lastCrypto;
+    let lastPriceBTC = 0;
+    let lastPriceETH = 0;
+    let lastPriceLTC = 0;
+
     let ws:WebSocket = new WebSocket(url);
 
     let observable = Rx.Observable.create((obs: Rx.Observer<MessageEvent>) => {
@@ -43,45 +43,39 @@ export class WebsocketService {
     ws.onmessage = function(e)  {
         let data = JSON.parse(e.data);
         console.log("websocket says:" + e.data);
-        let thisCrypto:String = data.product_id.toString().toLowerCase();
-        thisCrypto = thisCrypto.split("-")[0];
-        lastCrypto = "last" + thisCrypto;
-        let thisPrice = parseFloat(data.price).toFixed(2);
 
-        if (thisCrypto === "btc") {
-          if (thisPrice !== lastbtc) {
-            
-            let p = document.createElement("p");
-            let node = document.createTextNode("this: " + thisPrice + "last: " + lastbtc);
-            
-            p.append(node);
-            document.getElementById("pofs-crypto-prices-" + thisCrypto).append(p);
-            lastbtc = thisPrice;
-         }
-       }
-       else if (thisCrypto === "eth") {
-        if (thisPrice !== lasteth) {
-          
-          let p = document.createElement("p");
-          let node = document.createTextNode("this: " + thisPrice + "last: " + lasteth);
-          
-          p.append(node);
-          document.getElementById("pofs-crypto-prices-" + thisCrypto).append(p);
-          lasteth = thisPrice;
-       }
-     }
-     else if (thisCrypto === "ltc") {
-      if (thisPrice !== lastltc) {
+        let thisCrypto = data.product_id.toString();
+        let thisPrice = data.price;
+        let thisDate = new Date().toLocaleDateString("en-US");
+        let thisTime = new Date().toLocaleTimeString("en-US");
+        var currencyOptions = { style: 'currency', currency: 'USD' };
+        var changeToDollar = new Intl.NumberFormat('en-US', currencyOptions);
         
-        let p = document.createElement("p");
-        let node = document.createTextNode("this: " + thisPrice + "last: " + lastltc);
-        
-        p.append(node);
-        document.getElementById("pofs-crypto-prices-" + thisCrypto).append(p);
-        lastltc = thisPrice;
-     }
-
-   }
+        let writeCryptoPrice = function(lastPrice) {
+          let priceDifference = thisPrice - lastPrice;
+          if (lastPrice < thisPrice)  {
+            document.getElementById("pofs-crypto-prices-" + thisCrypto.toLowerCase()).innerHTML = "<p>" + thisDate + " " + thisTime + " - <span style='color:cadetblue'>" + changeToDollar.format(thisPrice) + " ▲" + changeToDollar.format(priceDifference) + "</span></p>" + document.getElementById("pofs-crypto-prices-" + thisCrypto.toLowerCase()).innerHTML;
+          }
+          else {
+            document.getElementById("pofs-crypto-prices-" + thisCrypto.toLowerCase()).innerHTML = "<p>" + thisDate + " " + thisTime + " - <span  style='color:indianred'>" + changeToDollar.format(thisPrice) + " ▼" + changeToDollar.format(priceDifference) + "</span></p>" + document.getElementById("pofs-crypto-prices-" + thisCrypto.toLowerCase()).innerHTML;
+          }	
+  
+        };
+        if (thisCrypto === "BTC-USD" && lastPriceBTC !== thisPrice) {			
+          writeCryptoPrice(lastPriceBTC);
+          lastPriceBTC = thisPrice;
+          
+        }
+        else if (thisCrypto === "ETH-USD" && lastPriceETH !== thisPrice) {	
+          writeCryptoPrice(lastPriceETH);
+          lastPriceETH = thisPrice;
+          
+        }
+        else if (thisCrypto === "LTC-USD" && lastPriceLTC !== thisPrice) {			
+          writeCryptoPrice(lastPriceLTC);
+          lastPriceLTC = thisPrice;
+        }
+    
 
       };
       return () =>  {
