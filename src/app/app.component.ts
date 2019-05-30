@@ -9,24 +9,32 @@ import { ChatService } from "./chat.service";
   providers: [WebsocketService, ChatService]
 })
 export class AppComponent {
+
   constructor(private chatService: ChatService) {
     chatService.messages.subscribe(msg => {
       console.log("Response from websocket: " + msg);
     });
   }
 
-  private message = {
-    "type": "subscribe",
-    "channels": [{ "name": "ticker", "product_ids": [
-      "BTC-USD",
-      "ETH-USD",
-      "LTC-USD"
-    ] }]
-  };
+/*
+message = {
+  "product_id": "ETHC",
 
+}
+*/
+/*
+private message = {
+  "type": "subscribe",
+  "channels": [{ "name": "ticker", "product_ids": [
+    "BTC-USD",
+    "ETH-USD",
+    "LTC-USD"
+  ] }]
+};
   sendMsg() {
     console.log("clients says to websocket: ", this.message);
     this.chatService.messages.next(this.message);
-    //this.message.message = "";
+    this.message.message = "";
   }
+  */
 }
